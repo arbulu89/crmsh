@@ -7,7 +7,7 @@ services:
 stages:
   - test
   - delivery
-  - submit  
+  - submit
 
 env:
   global:
@@ -80,14 +80,14 @@ jobs:
         - $FUNCTIONAL_TEST resource run
 
     - stage: delivery
-      if: type != pull_request AND branch = master
+      if: type != pull_request
       env:
         - FOLDER=/package
         - PACKAGE_NAME=crmsh
 
       before_install:
-        - docker pull shap/continuous_deliver:latest 
-      
+        - docker pull shap/continuous_deliver:latest
+
       script:
         - |
           docker run -t -v "$(pwd):/package" \
