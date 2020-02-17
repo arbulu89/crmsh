@@ -19,7 +19,6 @@ import re
 import time
 import readline
 import shutil
-import atexit
 from string import Template
 from lxml import etree
 from . import config
@@ -40,7 +39,7 @@ SYSCONFIG_SBD = "/etc/sysconfig/sbd"
 SYSCONFIG_FW = "/etc/sysconfig/SuSEfirewall2"
 SYSCONFIG_FW_CLUSTER = "/etc/sysconfig/SuSEfirewall2.d/services/cluster"
 PCMK_REMOTE_AUTH = "/etc/pacemaker/authkey"
-COROSYNC_CONF_ORIG = "/etc/corosync/corosync.orig"
+COROSYNC_CONF_ORIG = tmpfiles.create()[1]
 
 
 INIT_STAGES = ("ssh", "ssh_remote", "csync2", "csync2_remote", "corosync", "storage", "sbd", "cluster", "vgfs", "admin", "qdevice")
@@ -245,7 +244,7 @@ def get_cluster_node_hostname():
     peer_node = None
     if _context.cluster_node:
         if utils.valid_ip_addr(_context.cluster_node):
-            rc, out, err = utils.get_stdout_stderr("ssh {} hostname".format(_context.cluster_node))
+            rc, out, err = utils.get_stdout_stderr("ssh {} crm_node --name".format(_context.cluster_node))
             if rc != 0:
                 error(err)
             peer_node = out
@@ -1889,7 +1888,6 @@ def join_cluster(seed_host):
         else:
             corosync.set_value("totem.nodeid", nodeid)
 
-    atexit.register(os.remove, COROSYNC_CONF_ORIG)
     shutil.copy(corosync.conf(), COROSYNC_CONF_ORIG)
 
     # check if use IPv6

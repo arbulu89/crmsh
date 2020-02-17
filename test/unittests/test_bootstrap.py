@@ -180,7 +180,7 @@ class TestBootstrap(unittest.TestCase):
         assert peer_node == "node1"
 
         mock_valid_ip.assert_called_once_with("1.1.1.1")
-        mock_stdout_stderr.assert_called_once_with("ssh 1.1.1.1 hostname")
+        mock_stdout_stderr.assert_called_once_with("ssh 1.1.1.1 crm_node --name")
 
     @mock.patch('crmsh.utils.valid_ip_addr')
     @mock.patch('crmsh.utils.get_stdout_stderr')
@@ -231,10 +231,11 @@ class TestBootstrap(unittest.TestCase):
     @mock.patch('crmsh.bootstrap.get_cluster_node_hostname')
     def test_is_online_peer_offline(self, mock_get_peer, mock_search, mock_this_node,
             mock_copy, mock_corosync_conf, mock_csync2, mock_stop_service, mock_error):
+        bootstrap.COROSYNC_CONF_ORIG = "/tmp/crmsh_tmpfile"
         mock_search.side_effect = [ mock.Mock(), None ]
         mock_this_node.return_value = "node2"
         mock_get_peer.return_value = "node1"
-        mock_corosync_conf.side_effect = [ "/etc/corosync/corosync.conf", 
+        mock_corosync_conf.side_effect = [ "/etc/corosync/corosync.conf",
                 "/etc/corosync/corosync.conf"]
 
         bootstrap.is_online("text")
@@ -249,7 +250,7 @@ class TestBootstrap(unittest.TestCase):
             mock.call(),
             mock.call()
             ])
-        mock_copy.assert_called_once_with("/etc/corosync/corosync.orig", "/etc/corosync/corosync.conf")
+        mock_copy.assert_called_once_with(bootstrap.COROSYNC_CONF_ORIG, "/etc/corosync/corosync.conf")
         mock_csync2.assert_called_once_with("/etc/corosync/corosync.conf")
         mock_stop_service.assert_called_once_with("corosync")
         mock_error.assert_called_once_with("Cannot see peer node \"node1\", please check the communication IP")
